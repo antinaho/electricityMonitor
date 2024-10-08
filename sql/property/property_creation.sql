@@ -1,5 +1,0 @@
-CREATE TABLE IF NOT EXISTS property(
-	location_name VARCHAR(255) PRIMARY KEY NOT NULL,
-	property_name VARCHAR(255) NOT NULL,
-	property_code VARCHAR(255) NOT NULL
-);

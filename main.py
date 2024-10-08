@@ -9,7 +9,8 @@ from utils.db import DatabaseConnection, ConnectionParams
 
 from datetime import datetime, timedelta
 from urllib.parse import quote
-from utils.sql_helper import execute_sql_file
+from utils.sql_helper import execute_sql_file, batch_execute
+
 
 def get_property_data() -> pd.DataFrame:
     url = "https://helsinki-openapi.nuuka.cloud/api/v1.0/Property/List"
@@ -32,25 +33,27 @@ def get_energy_data(c) -> None:
     start_time = f"StartTime={daily_e.start_date}"
     end_time = f"EndTime={daily_e.end_date}"
 
-    execute_sql_file("sql/energy/electricity_creation.sql", c)
-
-    c.execute("SELECT location_name FROM property_clean")
+    c.execute("SELECT location_name FROM location.property_clean")
     locations = c.fetchall()
-    for i, loc in enumerate(locations):
+    for loc in locations:
         location_name = f"SearchString={quote(loc[0])}"
         tail = f"{time_slice}/ListByProperty?Record=LocationName&{location_name}&{reporting_group}&{start_time}&{end_time}"
         url = head + tail
         try:
             df = pd.read_json(url)
+
+            reqs = ['timestamp', 'reportingGroup', 'locationName', 'value', 'unit']
+            if not all(col in df.columns for col in reqs):
+                continue
+
             df = df[df['timestamp'] != daily_e.end_date]
             df = df.drop(columns=["reportingGroup"])
-            list_of_tuples = [(row['locationName'],
-                               row['timestamp'].strftime('%Y-%m-%d-%H'),
-                               row['value'],
-                               row['unit']) for index, row in df.iterrows()]
-            execute_sql_file("sql/energy/electricity_insert.sql",
-                             c,
-                             list_of_tuples)
+
+            params = tuple(
+                (row['locationName'], row['timestamp'].strftime('%Y-%m-%d-%H'), row['value'], row['unit'])
+                for _, row in df.iterrows()
+            )
+            batch_execute(c, "sql/energy/insert_electricity_data.sql", params)
 
         except os.error as e:
             pass
@@ -65,9 +68,6 @@ def get_warehouse_creds() -> ConnectionParams:
         port=int(os.getenv('POSTGRES_PORT', 5432)),
     )
 
-def create_property_table(c) -> None:
-    execute_sql_file("sql/property/property_creation.sql", c)
-
 def insert_to_property_table(c) -> None:
     properties = get_property_data()
     fill_values = {
@@ -76,15 +76,17 @@ def insert_to_property_table(c) -> None:
         "propertyCode": 0,
     }
     properties = properties.fillna(fill_values).to_dict("records")
-    tr_properties = [tuple(d.values()) for d in properties]
-    execute_sql_file("sql/property/property_insert.sql", c, tr_properties)
+
+    params = tuple((item['locationName'], item['propertyName'], item['propertyCode']) for item in properties)
+
+    batch_execute(c, "sql/property/insert_property_data.sql", params)
+
 
 def clean_property_table(c) -> None:
-    execute_sql_file("sql/property/property_transform.sql", c)
+    execute_sql_file(c, "sql/property/transform_property_data.sql")
 
 def main() -> None:
     with DatabaseConnection(get_warehouse_creds()).connection() as c:
-        create_property_table(c)
 
         insert_to_property_table(c)
 

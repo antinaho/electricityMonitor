@@ -1,4 +1,4 @@
-INSERT INTO property(
+INSERT INTO location.property(
 	location_name, 
 	property_name, 
 	property_code)
