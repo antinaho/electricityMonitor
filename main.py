@@ -63,6 +63,7 @@ def get_energy_data(c) -> None:
             if not all(col in df.columns for col in reqs):
                 continue
 
+            df = df[df['value'] >= 0]
             df = df[df['timestamp'] != daily_e.end_date]
             df = df.drop(columns=["reportingGroup"])
 
