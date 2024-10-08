@@ -9,7 +9,7 @@ from utils.db import DatabaseConnection, ConnectionParams
 
 from datetime import datetime, timedelta
 from urllib.parse import quote
-from utils.sql_helper import execute_sql_file, batch_execute
+from utils.sql_helper import execute_sql_file, batch_execute, execute_command
 
 
 def get_property_data() -> pd.DataFrame:
@@ -22,6 +22,22 @@ def get_property_data() -> pd.DataFrame:
         print(f"Error, {e}")
         sys.exit(1)
 
+def insert_to_property_table(c) -> None:
+    properties = get_property_data()
+    fill_values = {
+        "locationName": "empty",
+        "propertyName": "empty",
+        "propertyCode": 0,
+    }
+    properties = properties.fillna(fill_values).to_dict("records")
+
+    params = tuple((item['locationName'], item['propertyName'], item['propertyCode']) for item in properties)
+
+    batch_execute(c, "sql/property/insert_property_data.sql", params)
+
+
+def clean_property_table(c) -> None:
+    execute_sql_file(c, "sql/property/transform_property_data.sql")
 
 def get_energy_data(c) -> None:
     head = "https://helsinki-openapi.nuuka.cloud/api/v1.0/EnergyData/"
@@ -33,7 +49,8 @@ def get_energy_data(c) -> None:
     start_time = f"StartTime={daily_e.start_date}"
     end_time = f"EndTime={daily_e.end_date}"
 
-    c.execute("SELECT location_name FROM location.property_clean")
+    execute_command(c, "SELECT location_name FROM location.property_clean")
+
     locations = c.fetchall()
     for loc in locations:
         location_name = f"SearchString={quote(loc[0])}"
@@ -58,7 +75,6 @@ def get_energy_data(c) -> None:
         except os.error as e:
             pass
 
-load_dotenv('env')
 def get_warehouse_creds() -> ConnectionParams:
     return ConnectionParams(
         db=os.getenv('POSTGRES_DB', ''),
@@ -68,26 +84,9 @@ def get_warehouse_creds() -> ConnectionParams:
         port=int(os.getenv('POSTGRES_PORT', 5432)),
     )
 
-def insert_to_property_table(c) -> None:
-    properties = get_property_data()
-    fill_values = {
-        "locationName": "empty",
-        "propertyName": "empty",
-        "propertyCode": 0,
-    }
-    properties = properties.fillna(fill_values).to_dict("records")
-
-    params = tuple((item['locationName'], item['propertyName'], item['propertyCode']) for item in properties)
-
-    batch_execute(c, "sql/property/insert_property_data.sql", params)
-
-
-def clean_property_table(c) -> None:
-    execute_sql_file(c, "sql/property/transform_property_data.sql")
-
 def main() -> None:
+    load_dotenv('env')
     with DatabaseConnection(get_warehouse_creds()).connection() as c:
-
         insert_to_property_table(c)
 
         clean_property_table(c)
