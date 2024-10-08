@@ -7,7 +7,7 @@ def batch_execute(cursor, sql_file, params) -> None:
         try:
             extras.execute_batch(cursor, command, params)
         except (Exception, p.DatabaseError) as e:
-            print(f"Batch error, {e}")
+            print(f"SQL Batch execute error, {e}")
 
 def execute_sql_file(cursor, sql_file_name) -> None:
     with open(sql_file_name, "r") as file:
@@ -16,4 +16,10 @@ def execute_sql_file(cursor, sql_file_name) -> None:
             try:
                 cursor.execute(command)
             except (Exception, p.DatabaseError) as e:
-                ...
+                print(f"SQL execute error, {e}")
+
+def execute_command(cursor, command) -> None:
+    try:
+        cursor.execute(command)
+    except (Exception, p.DatabaseError) as e:
+        print(f"SQL execute error, {e}")
