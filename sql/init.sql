@@ -14,6 +14,7 @@ CREATE TABLE location.property_clean(
 	property_code VARCHAR(255)
 );
 
+
 CREATE SCHEMA energy;
 
 DROP TABLE IF EXISTS energy.electricity;
