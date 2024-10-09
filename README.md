@@ -34,5 +34,5 @@ docker compose up -d
 Go to localhost:3000 to see the Metabase UI.\
 If you don't see the UI wait ~30 seconds for Metabase to load up
 
-Metabase connection settings:
+Metabase connection settings:\
 ![metabase_connection_settings](https://github.com/antinaho/electricityMonitor/raw/master/assets/metabase_connections.png?raw=true)
