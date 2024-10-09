@@ -2,7 +2,7 @@
 
 This is a data pipeline to pull public Helsinki electricity usage from [Nuuka Open API](https://helsinki-openapi.nuuka.cloud/swagger/index.html) and load it into a data warehouse.
 
-<h1>Architecture</h1>
+<h2>Architecture</h2>
 
 ![metabase_connection_settings](https://github.com/antinaho/electricityMonitor/raw/master/assets/pipeline.png?raw=true)
 
@@ -10,8 +10,16 @@ We use python to pull, transform and load data. Our warehouse is postgres. We al
 
 Postgres, Metabase and python app run on separate docker containers.
 
-<h1>Run pipeline</h1>
-<h3>Run locally</h3>
+<h2>Basic analysis</h2>
+
+Usage for the whole day, all locations:
+![usage graph for the whole day](https://github.com/antinaho/electricityMonitor/raw/master/assets/daily_electricity_graph.png?raw=true)
+
+Daily usage ranked:
+![usage graph for the whole day](https://github.com/antinaho/electricityMonitor/raw/master/assets/top_5.png?raw=true)
+
+<h2>Run pipeline</h2>
+<h4>Run locally</h4>
 
 To run locally you need:
   1. git
