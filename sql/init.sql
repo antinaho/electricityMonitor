@@ -19,8 +19,17 @@ CREATE SCHEMA energy;
 
 DROP TABLE IF EXISTS energy.electricity;
 CREATE TABLE energy.electricity(
-    location_name VARCHAR(255) REFERENCES location.property_clean(location_name),
     timestamp VARCHAR(255),
+    reporting_group VARCHAR(255),
+    location_name VARCHAR(255) REFERENCES location.property_clean(location_name),
     value DECIMAL,
     unit VARCHAR(10)
+);
+
+DROP TABLE IF EXISTS energy.electricity_clean;
+CREATE TABLE energy.electricity_clean(
+	location_name VARCHAR(255),
+    timestamp TIMESTAMP,
+    value DECIMAL,
+    unit VARCHAR(255)
 );
