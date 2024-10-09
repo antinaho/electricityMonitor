@@ -1,9 +1,11 @@
 INSERT INTO energy.electricity (
-    location_name,
     timestamp,
+    reporting_group,
+    location_name,
     value,
     unit)
 VALUES (
+    %s,
     %s,
     %s,
     %s,

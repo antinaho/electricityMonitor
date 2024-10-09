@@ -1,5 +1,10 @@
-INSERT INTO location.property_clean (location_name, property_name, property_code)
-SELECT location_name, property_name, property_code
+INSERT INTO location.property_clean (
+        location_name,
+        property_name,
+        property_code)
+SELECT location_name,
+       property_name,
+       property_code
 FROM location.property
 WHERE 
 	location_name NOT LIKE '%(disabloitu)%'
@@ -9,7 +14,6 @@ WHERE
 
 	AND location_name NOT LIKE '%New property%'
 
-	AND location_name NOT LIKE '%empty%'
-	AND property_name NOT LIKE '%empty%'
-	AND property_code != '0'
+	AND location_name != ''
+	AND property_name != ''
 	AND property_code != '';
