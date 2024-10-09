@@ -24,14 +24,9 @@ def get_property_data() -> pd.DataFrame:
 
 def insert_to_property_table(c) -> None:
     properties = get_property_data()
-    fill_values = {
-        "locationName": "empty",
-        "propertyName": "empty",
-        "propertyCode": 0,
-    }
-    properties = properties.fillna(fill_values).to_dict("records")
+    properties = properties.dropna()
 
-    params = tuple((item['locationName'], item['propertyName'], item['propertyCode']) for item in properties)
+    params = [tuple(row) for row in properties.values]
 
     batch_execute(c, "sql/property/insert_property_data.sql", params)
 
@@ -39,7 +34,7 @@ def insert_to_property_table(c) -> None:
 def clean_property_table(c) -> None:
     execute_sql_file(c, "sql/property/transform_property_data.sql")
 
-def get_energy_data(c) -> None:
+def extract_electricity_data(c) -> None:
     head = "https://helsinki-openapi.nuuka.cloud/api/v1.0/EnergyData/"
 
     time_slice = "Hourly"
@@ -58,23 +53,16 @@ def get_energy_data(c) -> None:
         url = head + tail
         try:
             df = pd.read_json(url)
-
-            reqs = ['timestamp', 'reportingGroup', 'locationName', 'value', 'unit']
-            if not all(col in df.columns for col in reqs):
-                continue
-
-            df = df[df['value'] >= 0]
             df = df[df['timestamp'] != daily_e.end_date]
-            df = df.drop(columns=["reportingGroup"])
 
-            params = tuple(
-                (row['locationName'], row['timestamp'].strftime('%Y-%m-%d-%H'), row['value'], row['unit'])
-                for _, row in df.iterrows()
-            )
+            params = [tuple(row) for row in df.values]
+
             batch_execute(c, "sql/energy/insert_electricity_data.sql", params)
-
         except os.error as e:
             pass
+
+def clean_electricity_data(c) -> None:
+    execute_sql_file(c, "sql/energy/transform_electricity_data.sql")
 
 def get_warehouse_creds() -> ConnectionParams:
     return ConnectionParams(
@@ -92,7 +80,9 @@ def main() -> None:
 
         clean_property_table(c)
 
-        get_energy_data(c)
+        extract_electricity_data(c)
+
+        clean_electricity_data(c)
 
 
 if __name__ == '__main__':
