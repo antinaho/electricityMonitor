@@ -12,10 +12,10 @@ Postgres, Metabase and python app run on separate docker containers.
 
 <h2>Basic analysis</h2>
 
-Usage for the whole day, all locations:
+Usage for the whole day, all locations:\
 ![usage graph for the whole day](https://github.com/antinaho/electricityMonitor/raw/master/assets/daily_electricity_graph.png?raw=true)
 
-Daily usage ranked:
+Daily usage ranked:\
 ![usage graph for the whole day](https://github.com/antinaho/electricityMonitor/raw/master/assets/top_5.png?raw=true)
 
 <h2>Run pipeline</h2>
